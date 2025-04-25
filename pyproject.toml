@@ -1,0 +1,9 @@
+[project]
+name = "google-or-tools-examples"
+version = "0.1.0"
+description = "Examples and learning materials for Google OR-Tools"
+requires-python = ">=3.11"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
