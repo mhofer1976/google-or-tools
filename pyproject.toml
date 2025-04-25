@@ -4,8 +4,8 @@ version = "0.1.0"
 description = "Examples and learning materials for Google OR-Tools"
 requires-python = ">=3.11"
 dependencies = [
-    "ortools>=9.8.3297",
-    "pytest>=8.0.0",
+    "ortools>=9.12.4544",
+    "pytest>=8.3.5",
 ]
 
 [build-system]
