@@ -1,48 +1,97 @@
-# Google OR-Tools Examples
+# Resource Planner API
 
-This repository contains examples and learning materials for Google OR-Tools.
+A RESTful API for solving resource planning problems using constraint-based optimization.
 
-## Setup
+## Features
 
-1. Make sure you have Python 3.11+ installed
-2. Install UV (Astral's Python package manager)
-3. Clone this repository
-4. Create and activate the virtual environment:
-   ```powershell
-   uv venv .venv
-   .\.venv\Scripts\activate
+- Solve resource planning problems with various constraints
+- Support for multiple configuration formats
+- Validation of solutions against constraints
+- Easy integration with other systems
+
+## API Endpoints
+
+### 1. List Available Configurations
+
+```
+GET /api/resource-planner/configurations
+```
+
+Returns a list of available configuration names.
+
+### 2. Solve Resource Planning Problem
+
+```
+POST /api/resource-planner/solve
+```
+
+Accepts either:
+- A configuration name: `{"config_name": "oge"}`
+- A complete configuration JSON
+
+Returns a JSON with valid assignments containing:
+- date
+- employee_id
+- duty_id
+- duty_code
+- start_time
+- end_time
+- employee_name
+
+### 3. Validate Configuration
+
+```
+POST /api/resource-planner/validate-config
+```
+
+Accepts a configuration JSON and returns validation results.
+
+## Running the API
+
+1. Install dependencies:
    ```
-5. Install dependencies:
-   ```powershell
-   uv sync
+   pip install -r requirements.txt
    ```
 
-## Project Structure
+2. Run the API server:
+   ```
+   python run_api.py
+   ```
 
-- `src/`: Main source code
-- `examples/`: Example scripts demonstrating OR-Tools usage
-- `tests/`: Test cases
+3. The API will be available at `http://localhost:5000`
 
-## License
+## Example Usage
 
-MIT License
+See `examples/api_client.py` for an example of how to use the API.
 
-Copyright (c) 2024 Michael Hofer
+## Configuration Format
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+The configuration should be a JSON object with the following structure:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+```json
+{
+  "name": "Configuration Name",
+  "description": "Description of the configuration",
+  "start_date": "YYYY-MM-DD",
+  "end_date": "YYYY-MM-DD",
+  "employees": [
+    {
+      "id": 0,
+      "name": "Employee Name",
+      "max_days_in_a_row": 6,
+      "off_days": ["YYYY-MM-DD", "YYYY-MM-DD"],
+      "max_hours_per_day": 8,
+      "max_hours_in_period": 160,
+      "work_percentage": 100
+    }
+  ],
+  "duties": [
+    {
+      "code": "DUTY_CODE",
+      "required_employees": 2,
+      "start_time": "HH:MM",
+      "end_time": "HH:MM"
+    }
+  ]
+}
+```
