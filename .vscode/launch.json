@@ -7,7 +7,7 @@
             "request": "launch",
             "module": "flask",
             "env": {
-                "FLASK_APP": "run_api.py",
+                "FLASK_APP": "src.resource_planner.run_api",
                 "FLASK_ENV": "development",
                 "DEBUG_API": "1"
             },
