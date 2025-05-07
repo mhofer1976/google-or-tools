@@ -1,0 +1,121 @@
+[
+  {
+    "duty_id": 0,
+    "duty_code": "DIS",
+    "date": "2025-05-01",
+    "start_time": "04:00",
+    "end_time": "13:00",
+    "employees": [
+      {
+        "employee_id": 0,
+        "employee_name": "Anna Schmidt"
+      },
+      {
+        "employee_id": 1,
+        "employee_name": "Ben Weber"
+      }
+    ]
+  },
+  {
+    "duty_id": 1,
+    "duty_code": "DIS",
+    "date": "2025-05-02",
+    "start_time": "04:00",
+    "end_time": "13:00",
+    "employees": [
+      {
+        "employee_id": 0,
+        "employee_name": "Anna Schmidt"
+      },
+      {
+        "employee_id": 1,
+        "employee_name": "Ben Weber"
+      }
+    ]
+  },
+  {
+    "duty_id": 2,
+    "duty_code": "DIS",
+    "date": "2025-05-03",
+    "start_time": "04:00",
+    "end_time": "13:00",
+    "employees": [
+      {
+        "employee_id": 1,
+        "employee_name": "Ben Weber"
+      },
+      {
+        "employee_id": 2,
+        "employee_name": "Garry Smith"
+      }
+    ]
+  },
+  {
+    "duty_id": 3,
+    "duty_code": "DIS",
+    "date": "2025-05-04",
+    "start_time": "04:00",
+    "end_time": "13:00",
+    "employees": [
+      {
+        "employee_id": 0,
+        "employee_name": "Anna Schmidt"
+      },
+      {
+        "employee_id": 1,
+        "employee_name": "Ben Weber"
+      }
+    ]
+  },
+  {
+    "duty_id": 4,
+    "duty_code": "DIS",
+    "date": "2025-05-05",
+    "start_time": "04:00",
+    "end_time": "13:00",
+    "employees": [
+      {
+        "employee_id": 0,
+        "employee_name": "Anna Schmidt"
+      },
+      {
+        "employee_id": 1,
+        "employee_name": "Ben Weber"
+      }
+    ]
+  },
+  {
+    "duty_id": 5,
+    "duty_code": "DIS",
+    "date": "2025-05-06",
+    "start_time": "04:00",
+    "end_time": "13:00",
+    "employees": [
+      {
+        "employee_id": 0,
+        "employee_name": "Anna Schmidt"
+      },
+      {
+        "employee_id": 2,
+        "employee_name": "Garry Smith"
+      }
+    ]
+  },
+  {
+    "duty_id": 6,
+    "duty_code": "DIS",
+    "date": "2025-05-07",
+    "start_time": "04:00",
+    "end_time": "13:00",
+    "employees": [
+      {
+        "employee_id": 0,
+        "employee_name": "Anna Schmidt"
+      },
+      {
+        "employee_id": 1,
+        "employee_name": "Ben Weber"
+      }
+    ]
+  }
+]
