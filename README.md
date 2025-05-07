@@ -1,53 +1,80 @@
-# Resource Planner API
+# Google OR-Tools Examples and Applications
+
+A collection of practical examples and applications built using Google OR-Tools for solving various optimization problems.
+
+## Overview
+
+This repository contains multiple modules and applications that demonstrate how to use Google OR-Tools for different types of optimization problems. Each module is self-contained and can be used independently.
+
+## Available Modules
+
+### 1. Resource Planner API
 
 A RESTful API for solving resource planning problems using constraint-based optimization.
 
-## Features
-
+#### Features
 - Solve resource planning problems with various constraints
 - Support for multiple configuration formats
 - Validation of solutions against constraints
 - Easy integration with other systems
 - Built-in debugging capabilities
 
-## API Endpoints
+#### API Endpoints
 
-### 1. List Available Configurations
-
+##### List Available Configurations
 ```
 GET /api/resource-planner/configurations
 ```
-
 Returns a list of available configuration names.
 
-### 2. Solve Resource Planning Problem
-
+##### Solve Resource Planning Problem
 ```
 POST /api/resource-planner/solve
 ```
-
 Accepts either:
 - A configuration name: `{"config_name": "oge"}`
 - A complete configuration JSON
 
-Returns a JSON with valid assignments containing:
-- date
-- employee_id
-- duty_id
-- duty_code
-- start_time
-- end_time
-- employee_name
+Returns a JSON with valid assignments. Example:
+```
+{
+  "date": "2025-05-07",
+  "start_time": "11:30:50",
+  "end_time": "11:30:50",
+  "duration_seconds": 0.031709,
+  "status": "OPTIMAL",
+  "assignments": [
+    {
+      "duty_id": 0,
+      "duty_code": "DIS",
+      "date": "2025-05-01",
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "employees": [
+        {
+          "employee_id": 0,
+          "employee_name": "Anna Schmidt"
+        },
+        {
+          "employee_id": 1,
+          "employee_name": "Ben Weber"
+        }
+      ]
+    }, ...
+  ]
+}
+```
 
-### 3. Validate Configuration
-
+##### Validate Configuration
 ```
 POST /api/resource-planner/validate-config
 ```
-
 Accepts a configuration JSON and returns validation results.
 
-## Running the API
+### 2. TBD
+- TBD
+
+## Running the Applications
 
 1. Install dependencies using `uv`:
    ```bash
@@ -58,37 +85,27 @@ Accepts a configuration JSON and returns validation results.
    uv sync
    ```
 
-2. Run the API server:
+2. Run the desired application:
    ```bash
-   python run_api.py
+   # For Resource Planner API
+   python src/resource_planner/run_api.py
+
+   # With debugging enabled (Windows PowerShell)
+   $env:DEBUG_API=1
+   python src/resource_planner/run_api.py
+
+   # With debugging enabled (Linux/Mac)
+   DEBUG_API=1 python src/resource_planner/run_api.py
    ```
 
-3. The API will be available at `http://localhost:5000`
+## Debugging
 
-## Debugging the Solution
-
-The API includes built-in debugging capabilities to help troubleshoot and understand the solution process. There are two main ways to debug:
+Each module includes built-in debugging capabilities. Here are the main ways to debug:
 
 ### 1. Using Python's Built-in Debugger (pdb)
 
-1. Start the API server with debugging enabled:
-   ```bash
-   # On Windows (PowerShell)
-   $env:DEBUG_API=1
-   python run_api.py
-
-   # On Linux/Mac
-   DEBUG_API=1 python run_api.py
-   ```
-
-2. Make a request to the API endpoint:
-   ```bash
-   curl -X POST http://localhost:5000/api/resource-planner/solve \
-     -H "Content-Type: application/json" \
-     -d '{"config_name": "oge"}'
-   ```
-
-3. The debugger will pause at the breakpoint. Use these commands:
+1. Start the application with debugging enabled as shown above
+2. The debugger will pause at breakpoints. Use these commands:
    - `n` - Step to the next line
    - `s` - Step into a function
    - `c` - Continue execution
@@ -98,62 +115,44 @@ The API includes built-in debugging capabilities to help troubleshoot and unders
 
 ### 2. Using VS Code's Debugger (Recommended)
 
-1. Create a launch configuration in VS Code:
+1. Create a launch configuration in VS Code.
+
    ```json
+   # For Resource Planner API
    {
        "version": "0.2.0",
        "configurations": [
-           {
-               "name": "Python: Flask API",
-               "type": "python",
-               "request": "launch",
-               "module": "flask",
-               "env": {
-                   "FLASK_APP": "run_api.py",
-                   "FLASK_ENV": "development",
-                   "DEBUG_API": "1"
-               },
-               "args": [
-                   "run",
-                   "--no-debugger",
-                   "--no-reload"
-               ],
-               "jinja": true,
-               "justMyCode": false
-           }
+         {
+            "name": "Python: Resource Planner API",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "src.resource_planner.run_api",
+                "FLASK_ENV": "development",
+                "DEBUG_API": "1"
+            },
+            "args": [
+                "run",
+                "--debug",
+                "--reload"
+            ],
+            "jinja": true,
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}"
+         }
        ]
    }
    ```
 
-2. Set breakpoints in the code:
-   - In `src/api/resource_planner_api.py` for API endpoint debugging
-   - In `src/resource_planner.py` for solver debugging
-   - In `src/constraints/*.py` for constraint debugging
 
-3. Start debugging using the "Python: Flask API" configuration
+3. Choose the configuration and start debugging (F5)
 
-4. Make a request to the API endpoint
+## Configuration Formats
 
-5. The debugger will pause at your breakpoints, allowing you to:
-   - Step through the code
-   - Inspect variables
-   - Use the debug console
-   - Set additional breakpoints
+Each module has its own configuration format.
 
-### Debugging Tips
-
-- **Model State**: Use `planner.export_model()` to export the current model state to a JSON file
-- **Constraint Validation**: Check `validation_results` to see which constraints are failing
-- **Solver Progress**: Enable solver logging with `solver.parameters.log_search_progress = True`
-- **Variable Inspection**: Use the debugger to inspect the values of solver variables and constraints
-
-## Example Usage
-
-See `examples/api_client.py` for an example of how to use the API.
-
-## Configuration Format
-
-The configuration should be a JSON object with the following structure:
+### Resource Planner Configuration Format
 
 ```json
 {
@@ -182,3 +181,7 @@ The configuration should be a JSON object with the following structure:
   ]
 }
 ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
