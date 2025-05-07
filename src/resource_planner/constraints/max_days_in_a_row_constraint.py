@@ -37,6 +37,18 @@ class MaxDaysInARowConstraint(BaseConstraint):
                 # Ensure no more than max_days_in_a_row consecutive days are worked
                 self.model.Add(sum(day_assignments) <= max_days)
     
+    def _get_assignments_by_date(self, assignments: List[Dict[str, Any]]) -> Dict[datetime, List[Dict[str, Any]]]:
+        """Group assignments by date."""
+        assignments_by_date = {}
+        for assignment in assignments:
+            date = assignment['date']
+            assignments_by_date.setdefault(date, []).append(assignment)
+        return assignments_by_date
+
+    def _count_days_worked_in_window(self, window: List[datetime], assignments_by_date: Dict[datetime, List[Dict[str, Any]]]) -> int:
+        """Count how many days in the window have assignments."""
+        return sum(1 for date in window if date in assignments_by_date and assignments_by_date[date])
+
     def validate(self, solution: List[Dict[str, Any]]) -> bool:
         """
         Validate that no employee works more than the maximum allowed days in a row.
@@ -47,35 +59,17 @@ class MaxDaysInARowConstraint(BaseConstraint):
         Returns:
             True if no employee works more than max_days_in_a_row in a row, False otherwise
         """
-        # Get all unique dates and sort them
         dates_sorted = sorted(set(duty['date'] for duty in self.duties))
         
         for emp in self.employees:
             max_days = emp['max_days_in_a_row']
-            
-            # Get all assignments for this employee
             emp_assignments = self.get_employee_assignments(solution, emp['id'])
-            
-            # Group assignments by date
-            assignments_by_date = {}
-            for assignment in emp_assignments:
-                date = assignment['date']
-                if date not in assignments_by_date:
-                    assignments_by_date[date] = []
-                assignments_by_date[date].append(assignment)
+            assignments_by_date = self._get_assignments_by_date(emp_assignments)
             
             # Check each window of max_days + 1 consecutive days
-            for i in range(len(dates_sorted) - max_days + 1):
-                window = dates_sorted[i:i + max_days + 1]  # +1 to check one more day
+            windows = (dates_sorted[i:i + max_days + 1] for i in range(len(dates_sorted) - max_days + 1))
+            
+            if any(self._count_days_worked_in_window(window, assignments_by_date) > max_days for window in windows):
+                return False
                 
-                # Count days worked in this window
-                days_worked = 0
-                for date in window:
-                    if date in assignments_by_date and assignments_by_date[date]:
-                        days_worked += 1
-                
-                # If more than max_days_in_a_row days worked in this window, constraint is violated
-                if days_worked > max_days:
-                    return False
-                    
         return True 

@@ -1,8 +1,8 @@
 {
-  "name": "Test Level 2",
-  "description": "A very simple test with 3 employees and a duty that requires 2 employees",
+  "name": "Test Max Working Minutes",
+  "description": "A very simple test with 3 employees and a duty to test max working time per period",
   "start_date": "2025-05-01",
-  "end_date": "2025-05-15",
+  "end_date": "2025-05-14",
   "employees": [
     {
       "id": 0,
@@ -10,8 +10,8 @@
       "max_days_in_a_row": 6,
       "off_days": ["2025-05-03"],
       "max_hours_per_day": 8,
-      "max_hours_in_period": 40,
-      "work_percentage": 100
+      "max_hours_in_period": 16,
+      "work_percentage": 20
     },
     {
       "id": 1,

@@ -1,4 +1,5 @@
 from typing import Dict, List, Any
+from collections import defaultdict
 from .base_constraint import BaseConstraint
 
 class WorkloadBalanceConstraint(BaseConstraint):
@@ -23,6 +24,27 @@ class WorkloadBalanceConstraint(BaseConstraint):
         super().__init__(model, assignments, employees, duties)
         self.max_deviation_percent = max_deviation_percent
     
+    def _calculate_workloads(self) -> Dict[str, Any]:
+        """Calculate workloads and average for all employees."""
+        # Calculate total minutes for each employee
+        emp_workloads = defaultdict(int)
+        total_minutes = 0
+        
+        for duty in self.duties:
+            minutes = duty['working_minutes']
+            total_minutes += minutes * duty['required_employees']
+            
+            for emp in self.employees:
+                emp_workloads[emp['id']] += minutes * self.assignments[emp['id'], duty['id']]
+        
+        avg_workload = total_minutes / len(self.employees) if self.employees else 0
+        
+        return {
+            'emp_workloads': emp_workloads,
+            'total_minutes': total_minutes,
+            'avg_workload': avg_workload
+        }
+    
     def apply(self) -> None:
         """
         Apply the workload balance constraint to the model.
@@ -30,60 +52,44 @@ class WorkloadBalanceConstraint(BaseConstraint):
         This adds constraints to ensure that each employee's workload is within
         the allowed deviation from the average workload.
         """
-        # Calculate total hours worked for each employee
-        emp_workloads = {}
-        for emp in self.employees:
-            workload = 0
-            for duty in self.duties:
-                # Calculate hours worked for this duty
-                hours = self._calculate_duty_hours(duty['start_time'], duty['end_time'])
-                workload += hours * self.assignments[emp['id'], duty['id']]
-            emp_workloads[emp['id']] = workload
+        workloads = self._calculate_workloads()
+        avg_workload = workloads['avg_workload']
         
-        # Find average workload
-        total_duties = sum(duty['required_employees'] for duty in self.duties)
-        total_hours = sum(
-            self._calculate_duty_hours(duty['start_time'], duty['end_time']) * duty['required_employees'] 
-            for duty in self.duties
-        )
-        avg_workload = total_hours / len(self.employees)
+        # Calculate allowed workload range
+        max_allowed = int(avg_workload * (1 + self.max_deviation_percent / 100))
+        min_allowed = int(avg_workload * (1 - self.max_deviation_percent / 100))
         
-        # Add constraints to ensure no employee works more than max_deviation_percent% more than average
-        max_allowed_workload = int(avg_workload * (1 + self.max_deviation_percent / 100))
-        min_allowed_workload = int(avg_workload * (1 - self.max_deviation_percent / 100))
-        
-        for emp_id, workload in emp_workloads.items():
-            self.model.Add(workload <= max_allowed_workload)
-            self.model.Add(workload >= min_allowed_workload)
+        # Add constraints for each employee
+        for emp_id, workload in workloads['emp_workloads'].items():
+            self.model.Add(workload <= max_allowed)
+            self.model.Add(workload >= min_allowed)
         
         # Add objective to minimize the maximum workload difference
-        max_workload = self.model.NewIntVar(0, total_hours, 'max_workload')
-        min_workload = self.model.NewIntVar(0, total_hours, 'min_workload')
+        max_workload = self.model.NewIntVar(0, workloads['total_minutes'], 'max_workload')
+        min_workload = self.model.NewIntVar(0, workloads['total_minutes'], 'min_workload')
         
-        for workload in emp_workloads.values():
+        for workload in workloads['emp_workloads'].values():
             self.model.Add(max_workload >= workload)
             self.model.Add(min_workload <= workload)
         
         # Minimize the difference between max and min workload
         self.model.Minimize(max_workload - min_workload)
     
-    def validate(self, solution: List[Dict[str, Any]]) -> bool:
+    def validate(self, assignments: List[Dict[str, Any]]) -> bool:
         """
         Validate that employee workloads are reasonably balanced.
         
         Args:
-            solution: List of assignment dictionaries from the solver
+            assignments: List of assignment dictionaries from the solver
             
         Returns:
             True if workloads are balanced, False otherwise
         """
         # Calculate workload for each employee
-        emp_workloads = {}
-        for emp in self.employees:
-            emp_workloads[emp['id']] = 0
+        emp_workloads = defaultdict(int)
         
-        # Sum up hours for each employee based on assignments
-        for assignment in solution:
+        # Sum up minutes for each employee based on assignments
+        for assignment in assignments:
             duty_id = assignment.get('duty_id')
             if not duty_id:
                 continue
@@ -92,26 +98,25 @@ class WorkloadBalanceConstraint(BaseConstraint):
             if not duty:
                 continue
                 
-            hours = self._calculate_duty_hours(duty['start_time'], duty['end_time'])
+            minutes = duty['working_minutes']
             
             for emp_name in assignment['assigned_employees']:
                 emp = next((e for e in self.employees if e['name'] == emp_name), None)
                 if not emp:
                     continue
                     
-                emp_workloads[emp['id']] += hours
+                emp_workloads[emp['id']] += minutes
         
         # Calculate average workload
         total_workload = sum(emp_workloads.values())
         avg_workload = total_workload / len(self.employees) if self.employees else 0
         
         # Check if any employee's workload deviates too much from the average
-        for emp_id, workload in emp_workloads.items():
-            deviation_percent = abs(workload - avg_workload) / avg_workload * 100 if avg_workload > 0 else 0
-            if deviation_percent > self.max_deviation_percent:
-                return False
-                
-        return True
+        return all(
+            abs(workload - avg_workload) / avg_workload * 100 <= self.max_deviation_percent
+            for workload in emp_workloads.values()
+            if avg_workload > 0
+        )
     
     def _calculate_duty_hours(self, start_time: str, end_time: str) -> float:
         """

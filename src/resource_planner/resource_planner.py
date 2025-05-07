@@ -134,10 +134,11 @@ class ResourcePlanner:
         solver = cp_model.CpSolver()
         
         # Set solver parameters to help find solutions
-        #TODO: make this configurable
-        solver.parameters.max_time_in_seconds = 30.0  # Give the solver more time
+        #TODO: make this configurable / do we need it?
+        solver.parameters.max_time_in_seconds = 300.0 
+        # Give the solver more time
         solver.parameters.num_search_workers = 8  # Use multiple workers
-        solver.parameters.search_branching = cp_model.PORTFOLIO_SEARCH  # Use portfolio search
+        #solver.parameters.search_branching = cp_model.PORTFOLIO_SEARCH  # Use portfolio search
         solver.parameters.random_seed = 42  # Use a fixed seed for reproducibility
         
         status = solver.Solve(self.model)

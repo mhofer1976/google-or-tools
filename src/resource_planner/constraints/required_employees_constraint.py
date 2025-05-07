@@ -1,4 +1,5 @@
 from typing import Dict, List, Any
+from collections import defaultdict
 from .base_constraint import BaseConstraint
 
 class RequiredEmployeesConstraint(BaseConstraint):
@@ -19,33 +20,26 @@ class RequiredEmployeesConstraint(BaseConstraint):
                          for emp in self.employees)
             self.model.Add(emp_sum == required)
     
-    def validate(self, solution: List[Dict[str, Any]]) -> bool:
+    def _count_assignments_per_duty(self, assignments: List[Dict[str, Any]]) -> Dict[str, int]:
+        """Count how many employees are assigned to each duty."""
+        duty_counts = defaultdict(int)
+        for assignment in assignments:
+            duty_counts[assignment['duty_id']] += 1
+        return duty_counts
+    
+    def validate(self, assignments: List[Dict[str, Any]]) -> bool:
         """
         Validate that each duty has the required number of employees assigned.
         
         Args:
-            solution: List of assignment dictionaries from the solver
+            assignments: List of assignment dictionaries from the solver
             
         Returns:
             True if all duties have the required number of employees, False otherwise
         """
+        duty_counts = self._count_assignments_per_duty(assignments)
         
-        #TODO: This implementation is not correct.
-        
-        # for duty in self.duties:
-        #     # Find this duty in the solution
-        #     duty_assignments = next(
-        #         (assignment for assignment in solution 
-        #          if assignment.get('duty_id') == duty['id']),
-        #         None
-        #     )
-            
-        #     if not duty_assignments:
-        #         # If duty not found in solution, it's a validation failure
-        #         return False
-                
-        #     # Check if the number of assigned employees matches the required number
-        #     if len(duty_assignments['assigned_employees']) != duty['required_employees']:
-        #         return False
-                
-        return True 
+        return all(
+            duty_counts.get(duty['id'], 0) == duty['required_employees']
+            for duty in self.duties
+        ) 

@@ -5,6 +5,7 @@ from .one_duty_per_day_constraint import OneDutyPerDayConstraint
 from .rest_time_constraint import RestTimeConstraint
 from .max_days_in_a_row_constraint import MaxDaysInARowConstraint
 from .workload_balance_constraint import WorkloadBalanceConstraint
+from .max_working_mins_in_period_constraints import MaxWorkingMinsInPeriodConstraints
 
 __all__ = [
     'BaseConstraint',
@@ -14,4 +15,5 @@ __all__ = [
     'RestTimeConstraint',
     'MaxDaysInARowConstraint',
     'WorkloadBalanceConstraint',
+    'MaxWorkingMinsInPeriodConstraints',
 ] 
