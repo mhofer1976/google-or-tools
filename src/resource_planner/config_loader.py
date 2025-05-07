@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 class ConfigLoader:
     """Class for loading configuration files for the Resource Planner."""
     
-    def __init__(self, config_dir: str = "data/configurations"):
+    def __init__(self, config_dir: str = "data/resource_planner/configurations"):
         """
         Initializes the ConfigLoader.
         

@@ -25,7 +25,7 @@ class ResourcePlanningService:
     2. With a direct configuration JSON (for API/external calls)
     """
     
-    def __init__(self, config_source: Union[str, Dict[str, Any]], config_dir: str = "data/configurations"):
+    def __init__(self, config_source: Union[str, Dict[str, Any]], config_dir: str = "data/resource_planner/configurations"):
         """
         Initialize the ResourcePlanningService.
         
@@ -103,7 +103,7 @@ class ResourcePlanningService:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
         # Create debug directory if it doesn't exist
-        debug_dir = "data/debug"
+        debug_dir = "data/resource_planner/debug"
         os.makedirs(debug_dir, exist_ok=True)
         
         # Save input configuration
@@ -193,7 +193,7 @@ class ResourcePlanningService:
     #     return duration.total_seconds() / 3600
     
     @classmethod
-    def list_available_configurations(cls, config_dir: str = "data/configurations") -> List[str]:
+    def list_available_configurations(cls, config_dir: str = "data/resource_planner/configurations") -> List[str]:
         """
         List all available configuration names.
         
@@ -201,10 +201,9 @@ class ResourcePlanningService:
             config_dir: Directory containing configuration files
             
         Returns:
-            List of configuration names
+            List of available configuration names
         """
-        config_loader = ConfigLoader(config_dir)
-        return config_loader.list_configurations()
+        return ConfigLoader(config_dir).list_configurations()
     
     @classmethod
     def validate_configuration(cls, config: Dict[str, Any]) -> Dict[str, Any]:
