@@ -8,6 +8,7 @@ A RESTful API for solving resource planning problems using constraint-based opti
 - Support for multiple configuration formats
 - Validation of solutions against constraints
 - Easy integration with other systems
+- Built-in debugging capabilities
 
 ## API Endpoints
 
@@ -48,17 +49,103 @@ Accepts a configuration JSON and returns validation results.
 
 ## Running the API
 
-1. Install dependencies:
-   ```
-   pip install -r requirements.txt
+1. Install dependencies using `uv`:
+   ```bash
+   # Install uv if you haven't already
+   pip install uv
+
+   # Sync dependencies from pyproject.toml
+   uv sync
    ```
 
 2. Run the API server:
-   ```
+   ```bash
    python run_api.py
    ```
 
 3. The API will be available at `http://localhost:5000`
+
+## Debugging the Solution
+
+The API includes built-in debugging capabilities to help troubleshoot and understand the solution process. There are two main ways to debug:
+
+### 1. Using Python's Built-in Debugger (pdb)
+
+1. Start the API server with debugging enabled:
+   ```bash
+   # On Windows (PowerShell)
+   $env:DEBUG_API=1
+   python run_api.py
+
+   # On Linux/Mac
+   DEBUG_API=1 python run_api.py
+   ```
+
+2. Make a request to the API endpoint:
+   ```bash
+   curl -X POST http://localhost:5000/api/resource-planner/solve \
+     -H "Content-Type: application/json" \
+     -d '{"config_name": "oge"}'
+   ```
+
+3. The debugger will pause at the breakpoint. Use these commands:
+   - `n` - Step to the next line
+   - `s` - Step into a function
+   - `c` - Continue execution
+   - `p variable` - Print a variable's value
+   - `l` - Show the current location in the code
+   - `q` - Quit the debugger
+
+### 2. Using VS Code's Debugger (Recommended)
+
+1. Create a launch configuration in VS Code:
+   ```json
+   {
+       "version": "0.2.0",
+       "configurations": [
+           {
+               "name": "Python: Flask API",
+               "type": "python",
+               "request": "launch",
+               "module": "flask",
+               "env": {
+                   "FLASK_APP": "run_api.py",
+                   "FLASK_ENV": "development",
+                   "DEBUG_API": "1"
+               },
+               "args": [
+                   "run",
+                   "--no-debugger",
+                   "--no-reload"
+               ],
+               "jinja": true,
+               "justMyCode": false
+           }
+       ]
+   }
+   ```
+
+2. Set breakpoints in the code:
+   - In `src/api/resource_planner_api.py` for API endpoint debugging
+   - In `src/resource_planner.py` for solver debugging
+   - In `src/constraints/*.py` for constraint debugging
+
+3. Start debugging using the "Python: Flask API" configuration
+
+4. Make a request to the API endpoint
+
+5. The debugger will pause at your breakpoints, allowing you to:
+   - Step through the code
+   - Inspect variables
+   - Use the debug console
+   - Set additional breakpoints
+
+### Debugging Tips
+
+- **Model State**: Use `planner.export_model()` to export the current model state to a JSON file
+- **Constraint Validation**: Check `validation_results` to see which constraints are failing
+- **Solver Progress**: Enable solver logging with `solver.parameters.log_search_progress = True`
+- **Variable Inspection**: Use the debugger to inspect the values of solver variables and constraints
 
 ## Example Usage
 

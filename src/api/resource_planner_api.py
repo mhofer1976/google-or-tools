@@ -1,5 +1,7 @@
 from typing import Dict, List, Any, Union
 import json
+import pdb
+import os
 from flask import Flask, request, jsonify
 from ..resource_planning_service import ResourcePlanningService
 
@@ -15,11 +17,13 @@ def solve_resource_planning():
     2. A complete configuration JSON in the request body
     
     Returns:
-        JSON with valid assignments containing at minimum:
-        - date
-        - employee_id
-        - duty_id
-        Plus additional helpful attributes
+        JSON response containing:
+        - date: The date when solving started
+        - start_time: When solving started
+        - end_time: When solving finished
+        - duration_seconds: How long solving took
+        - status: The solver status (OPTIMAL, FEASIBLE, or INFEASIBLE)
+        - assignments: List of assignments with duty and employee information
     """
     try:
         data = request.get_json()
@@ -36,55 +40,9 @@ def solve_resource_planning():
             service = ResourcePlanningService(data)
         
         # Solve the planning problem
-        assignments = service.solve()
+        result = service.solve()
         
-        if not assignments:
-            return jsonify({"error": "No valid solution found"}), 404
-        
-        # Validate the solution against all constraints
-        validation_results = service.planner.validate_solution(assignments)
-        
-        # Check if all constraints are satisfied
-        all_valid = all(validation_results.values())
-        
-        if not all_valid:
-            # Filter out assignments that don't meet constraints
-            valid_assignments = []
-            for assignment in assignments:
-                # Check if this assignment is valid according to all constraints
-                is_valid = True
-                for constraint_name, is_valid_constraint in validation_results.items():
-                    if not is_valid_constraint:
-                        # We would need more detailed validation per assignment
-                        # For now, we'll just return all assignments if any constraint fails
-                        is_valid = False
-                        break
-                
-                if is_valid:
-                    valid_assignments.append(assignment)
-            
-            assignments = valid_assignments
-        
-        # Format the response with the required fields and additional helpful attributes
-        formatted_assignments = []
-        for assignment in assignments:
-            formatted_assignment = {
-                "date": assignment["date"],
-                "employee_id": assignment["employee_id"],
-                "duty_id": assignment["duty_id"],
-                # Additional helpful attributes
-                "duty_code": assignment["duty_code"],
-                "start_time": assignment["start_time"],
-                "end_time": assignment["end_time"],
-                "employee_name": assignment["employee_name"]
-            }
-            formatted_assignments.append(formatted_assignment)
-        
-        return jsonify({
-            "success": True,
-            "assignments": formatted_assignments,
-            "validation_results": validation_results
-        })
+        return jsonify(result)
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -1,6 +1,10 @@
 from ortools.sat.python import cp_model
 from datetime import datetime, timedelta, date
 from typing import List, Dict, Set, Tuple, Optional, Type
+import logging
+import json
+from pathlib import Path
+from enum import Enum
 
 from .constraints import (
     BaseConstraint,
@@ -12,6 +16,18 @@ from .constraints import (
     WorkloadBalanceConstraint,
 )
 
+
+class SolverStatus(Enum):
+    """Enum representing the possible statuses of the constraint solver.
+    FEASIBLE: The solver found a feasible but possibly not optimal solution"""
+
+    OPTIMAL = "OPTIMAL"  # The solver found an optimal solution
+    FEASIBLE = (
+        "FEASIBLE"  # The solver found a feasible but possibly not optimal solution
+    )
+    INFEASIBLE = "INFEASIBLE"  # The solver determined that no feasible solution exists
+
+
 class ResourcePlanner:
     """
     A constraint-based resource planner that uses OR-Tools to solve employee scheduling problems.
@@ -19,8 +35,14 @@ class ResourcePlanner:
     This planner allows adding various constraints to ensure the schedule meets all requirements.
     """
     
-    def __init__(self):
-        """Initialize the resource planner with an empty model and data structures."""
+    def __init__(self, debug_mode: bool = False, log_file: str = None):
+        """
+        Initialize the resource planner with an empty model and data structures.
+        
+        Args:
+            debug_mode: Whether to enable debugging features
+            log_file: Path to log file for debugging output
+        """
         self.model = cp_model.CpModel()
         self.assignments = {}
         self.employees = []
@@ -30,7 +52,7 @@ class ResourcePlanner:
         
     def add_employee(self, id: int, name: str, max_days_in_row: int, 
                     blocked_days: List[str], max_hours_per_day: int,
-                    max_hours_in_period: int, work_percentage: int) -> None:
+                    max_hours_in_period: int) -> None:
         """
         Add an employee to the planning system.
         
@@ -41,7 +63,6 @@ class ResourcePlanner:
             blocked_days: List of dates (YYYY-MM-DD) when the employee cannot work
             max_hours_per_day: Maximum hours the employee can work in a day
             max_hours_in_period: Maximum hours the employee can work in the planning period
-            work_percentage: Employee's work percentage (0-100)
         """
         self.employees.append({
             "id": id,
@@ -49,34 +70,32 @@ class ResourcePlanner:
             "max_days_in_a_row": max_days_in_row,
             "blocked_days": blocked_days,
             "max_hours_per_day": max_hours_per_day,
-            "max_hours_in_period": max_hours_in_period,
-            "work_percentage": work_percentage,
+            "max_hours_in_period": max_hours_in_period
         })
         
-    def add_duty(self, code: str, required_employees: int, start_time: str, end_time: str) -> int:
+    def add_duty(self, id: int, code: str, date: str, required_employees: int, start_time: str, end_time: str, working_minutes: int) -> None:
         """
         Add a duty/shift to the planning system.
         
         Args:
+            id: Unique identifier for the duty
             code: Duty code (e.g., "DIS", "OPS")
+            date: Date in format "YYYY-MM-DD"
             required_employees: Number of employees required for this duty
             start_time: Start time in format "HH:MM"
             end_time: End time in format "HH:MM"
-            
-        Returns:
-            The ID of the newly created duty
+            working_minutes: Number of minutes the duty lasts
         """
-        duty_id = len(self.duties)
         duty = {
-            "id": duty_id,
+            "id": id,
             "code": code,
+            "date": date,
             "required_employees": required_employees,
             "start_time": start_time,
             "end_time": end_time,
-            "date": None,  # Will be set when expanding duties
+            "working_minutes": working_minutes
         }
         self.duties.append(duty)
-        return duty_id
         
     def add_constraint(self, constraint_class: Type[BaseConstraint], **kwargs) -> None:
         """
@@ -105,61 +124,76 @@ class ResourcePlanner:
         for constraint in self.constraints:
             constraint.apply()
         
-    def solve(self):
+    def solve(self) -> SolverStatus:
         """
         Solve the resource planning problem.
         
         Returns:
-            List of assignment dictionaries with the following fields:
-            - date: The date of the assignment
-            - employee_id: The ID of the assigned employee
-            - duty_id: The ID of the assigned duty
-            - duty_code: The code of the assigned duty
-            - start_time: The start time of the duty
-            - end_time: The end time of the duty
-            - employee_name: The name of the assigned employee
+            SolverStatus: The status of the solver (OPTIMAL, FEASIBLE, or INFEASIBLE)
         """
         solver = cp_model.CpSolver()
+        
+        # Set solver parameters to help find solutions
+        #TODO: make this configurable
+        solver.parameters.max_time_in_seconds = 30.0  # Give the solver more time
+        solver.parameters.num_search_workers = 8  # Use multiple workers
+        solver.parameters.search_branching = cp_model.PORTFOLIO_SEARCH  # Use portfolio search
+        solver.parameters.random_seed = 42  # Use a fixed seed for reproducibility
+        
         status = solver.Solve(self.model)
         
+        assignments = []
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-            assignments = []
-            
             # Process the solution
-            for emp in self.employees:
-                for duty in self.duties:
-                    if solver.Value(self.assignments[emp['id'], duty['id']]) == 1:
-                        # Create an assignment with all necessary fields
-                        assignment = {
-                            "date": duty['date'],
-                            "employee_id": emp['id'],
-                            "duty_id": duty['id'],
-                            "duty_code": duty['code'],
-                            "start_time": duty['start_time'],
-                            "end_time": duty['end_time'],
-                            "employee_name": emp['name']
-                        }
-                        assignments.append(assignment)
+            assignments.extend([
+                {
+                    "duty_id": duty['id'],
+                    "duty_code": duty['code'],
+                    "date": duty['date'],
+                    "start_time": duty['start_time'],
+                    "end_time": duty['end_time'],
+                    "employees": [
+                        {"employee_id": emp['id'], "employee_name": emp['name']}
+                        for emp in self.employees
+                        if solver.Value(self.assignments[emp['id'], duty['id']]) == 1
+                    ]
+                }
+                for duty in self.duties
+                if any(solver.Value(self.assignments[emp['id'], duty['id']]) == 1 
+                      for emp in self.employees)
+            ])
             
-            return assignments
+            # Sort assignments by multiple fields: date, start_time, and employee_name
+            assignments.sort(key=lambda x: (x['date'], x['duty_code'], x['start_time']))
         
-        return []
+        self.assignments = assignments
         
-    def validate_solution(self, solution):
+        # Map OR-Tools status to our SolverStatus enum
+        if status == cp_model.OPTIMAL:
+            return SolverStatus.OPTIMAL
+        elif status == cp_model.FEASIBLE:
+            return SolverStatus.FEASIBLE
+        else:
+            return SolverStatus.INFEASIBLE
+        
+    def validate_solution(self):
         """
-        Validate a solution against all constraints.
+        Validate the current assignments against all constraints.
         
-        Args:
-            solution: List of assignment dictionaries
-            
         Returns:
             Dictionary mapping constraint names to validation results (True/False)
+            
+        Raises:
+            ValueError: If there are no valid assignments to validate
         """
+        if not self.assignments:
+            raise ValueError("No valid assignments to validate")
+            
         validation_results = {}
         
         for constraint in self.constraints:
             constraint_name = constraint.__class__.__name__
-            is_valid = constraint.validate(solution)
+            is_valid = constraint.validate(self.assignments)
             validation_results[constraint_name] = is_valid
             
-        return validation_results 
+        return validation_results

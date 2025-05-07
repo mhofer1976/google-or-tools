@@ -65,7 +65,7 @@ class BaseConstraint(ABC):
             
         return [
             assignment for assignment in solution
-            if employee["name"] in assignment["assigned_employees"]
+            if employee["id"] in assignment["employee_id"]
         ]
     
     def get_duty_by_id(self, duty_id: int) -> Dict[str, Any]:

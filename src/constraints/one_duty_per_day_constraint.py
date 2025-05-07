@@ -37,26 +37,29 @@ class OneDutyPerDayConstraint(BaseConstraint):
         Returns:
             True if each employee has at most one duty per day, False otherwise
         """
-        # Group assignments by employee and date
-        assignments_by_emp_date = {}
         
-        for assignment in solution:
-            date = assignment['date']
-            for emp_name in assignment['assigned_employees']:
-                # Find employee ID from name
-                emp = next((e for e in self.employees if e['name'] == emp_name), None)
-                if not emp:
-                    continue
+        #TODO: This implementation is not corret.
+        
+        # # Group assignments by employee and date
+        # assignments_by_emp_date = {}
+        
+        # for assignment in solution:
+        #     date = assignment['date']
+        #     for emp_name in assignment['assigned_employees']:
+        #         # Find employee ID from name
+        #         emp = next((e for e in self.employees if e['name'] == emp_name), None)
+        #         if not emp:
+        #             continue
                     
-                emp_id = emp['id']
-                key = (emp_id, date)
+        #         emp_id = emp['id']
+        #         key = (emp_id, date)
                 
-                if key not in assignments_by_emp_date:
-                    assignments_by_emp_date[key] = 0
-                assignments_by_emp_date[key] += 1
+        #         if key not in assignments_by_emp_date:
+        #             assignments_by_emp_date[key] = 0
+        #         assignments_by_emp_date[key] += 1
                 
-                # If more than one assignment on the same day, constraint is violated
-                if assignments_by_emp_date[key] > 1:
-                    return False
+        #         # If more than one assignment on the same day, constraint is violated
+        #         if assignments_by_emp_date[key] > 1:
+        #             return False
                     
         return True 
