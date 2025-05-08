@@ -7,7 +7,11 @@ class WorkloadBalanceConstraint(BaseConstraint):
     Constraint ensuring employee workloads are reasonably balanced.
     
     This constraint ensures that no employee works significantly more or less
-    than the average workload across all employees.
+    than the average workload across all employees. The balance is measured in
+    terms of utilization percentage (0-100) of each employee's maximum available hours.
+    
+    The constraint uses a scaled approach (multiplied by 100) to handle integer
+    division more precisely in the CP-SAT solver.
     """
     
     def __init__(self, model, assignments, employees, duties, max_deviation_percent=20):
@@ -23,57 +27,127 @@ class WorkloadBalanceConstraint(BaseConstraint):
         """
         super().__init__(model, assignments, employees, duties)
         self.max_deviation_percent = max_deviation_percent
+        self.emp_utilizations = {}  # Maps employee_id to their utilization variable (0-100 scale)
     
     def _calculate_workloads(self) -> Dict[str, Any]:
-        """Calculate workloads and average for all employees."""
-        # Calculate total minutes for each employee
-        emp_workloads = defaultdict(int)
-        total_minutes = 0
+        """
+        Calculate workloads and utilizations for all employees.
         
-        for duty in self.duties:
-            minutes = duty['working_minutes']
-            total_minutes += minutes * duty['required_employees']
+        Creates CP-SAT variables for:
+        - Total minutes worked by each employee
+        - Utilization percentage for each employee (0-100 scale)
+        
+        Returns:
+            Dictionary containing workload and utilization variables
+        """
+        emp_workload_minutes = {}
+        
+        for emp in self.employees:
+            # Create variable for total minutes worked by this employee
+            max_possible_minutes = emp['max_hours_in_period'] * 60
+            emp_workload_minutes[emp['id']] = self.model.NewIntVar(
+                0, max_possible_minutes, 
+                f'workload_minutes_{emp["id"]}'
+            )
             
-            for emp in self.employees:
-                emp_workloads[emp['id']] += minutes * self.assignments[emp['id'], duty['id']]
-        
-        avg_workload = total_minutes / len(self.employees) if self.employees else 0
+            # Sum up minutes from all duties
+            duty_minutes = []
+            for duty in self.duties:
+                minutes = duty['working_minutes']
+                duty_minutes.append(minutes * self.assignments[emp['id'], duty['id']])
+            
+            # Add constraint for total minutes
+            self.model.Add(emp_workload_minutes[emp['id']] == sum(duty_minutes))
+            
+            # Create utilization variable (0-100 scale)
+            self.emp_utilizations[emp['id']] = self.model.NewIntVar(
+                0, 100, 
+                f'utilization_percent_{emp["id"]}'
+            )
+            
+            # Add division constraint for utilization percentage
+            self.model.AddDivisionEquality(
+                self.emp_utilizations[emp['id']],
+                emp_workload_minutes[emp['id']],
+                max_possible_minutes
+            )
         
         return {
-            'emp_workloads': emp_workloads,
-            'total_minutes': total_minutes,
-            'avg_workload': avg_workload
+            'emp_workloads': emp_workload_minutes,
+            'emp_utilizations': self.emp_utilizations
         }
     
     def apply(self) -> None:
         """
         Apply the workload balance constraint to the model.
         
-        This adds constraints to ensure that each employee's workload is within
-        the allowed deviation from the average workload.
+        This method:
+        1. Calculates individual employee workloads and utilizations
+        2. Computes the average utilization across all employees
+        3. Ensures each employee's utilization stays within the allowed deviation
+           from the average
+        
+        The calculations use a scaled approach (multiplied by 1000) to handle
+        integer division more precisely, especially for small denominators.
         """
         workloads = self._calculate_workloads()
-        avg_workload = workloads['avg_workload']
         
-        # Calculate allowed workload range
-        max_allowed = int(avg_workload * (1 + self.max_deviation_percent / 100))
-        min_allowed = int(avg_workload * (1 - self.max_deviation_percent / 100))
+        # Scale factor to avoid integer division issues
+        # Using 1000 to ensure good precision with small denominators
+        SCALE = 1000
         
-        # Add constraints for each employee
-        for emp_id, workload in workloads['emp_workloads'].items():
-            self.model.Add(workload <= max_allowed)
-            self.model.Add(workload >= min_allowed)
+        # Create variable for average utilization (scaled)
+        self.avg_utilization = self.model.NewIntVar(
+            0, 100 * SCALE, 
+            'avg_utilization_scaled'
+        )
         
-        # Add objective to minimize the maximum workload difference
-        max_workload = self.model.NewIntVar(0, workloads['total_minutes'], 'max_workload')
-        min_workload = self.model.NewIntVar(0, workloads['total_minutes'], 'min_workload')
+        # Create variable for total utilization (scaled)
+        total_utilization = self.model.NewIntVar(
+            0, 100 * len(self.employees) * SCALE, 
+            'total_utilization_scaled'
+        )
         
-        for workload in workloads['emp_workloads'].values():
-            self.model.Add(max_workload >= workload)
-            self.model.Add(min_workload <= workload)
+        # Add constraint for total utilization
+        self.model.Add(total_utilization == sum(self.emp_utilizations.values()) * SCALE)
         
-        # Minimize the difference between max and min workload
-        self.model.Minimize(max_workload - min_workload)
+        # Add constraint for average utilization
+        # Using scaled values to maintain precision with small denominators
+        self.model.AddDivisionEquality(
+            self.avg_utilization,
+            total_utilization,
+            len(self.employees)
+        )
+        
+        # For each employee, ensure their utilization is within the allowed range
+        for emp_id, utilization in workloads['emp_utilizations'].items():
+            # Scale up the utilization
+            scaled_utilization = self.model.NewIntVar(
+                0, 100 * SCALE, 
+                f'utilization_scaled_{emp_id}'
+            )
+            self.model.Add(scaled_utilization == utilization * SCALE)
+            
+            # Calculate the allowed deviation for this employee (scaled)
+            max_deviation = self.model.NewIntVar(
+                0, 100 * SCALE, 
+                f'deviation_scaled_{emp_id}'
+            )
+            
+            # Calculate deviation using scaled values
+            # The division by 100 is fine as is because:
+            # 1. The numerator is already scaled (avg_utilization * max_deviation_percent)
+            # 2. The denominator (100) is a constant
+            # 3. We want the result in the same scale as other variables
+            self.model.AddDivisionEquality(
+                max_deviation,
+                self.avg_utilization * self.max_deviation_percent,
+                100
+            )
+            
+            # Add constraints to keep utilization within allowed range
+            self.model.Add(scaled_utilization <= self.avg_utilization + max_deviation)
+            self.model.Add(scaled_utilization >= self.avg_utilization - max_deviation)
     
     def validate(self, assignments: List[Dict[str, Any]]) -> bool:
         """
