@@ -3,6 +3,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 from ortools.linear_solver import pywraplp
 
 
@@ -109,7 +110,7 @@ def visualize_solution(solver, x, costs, status):
         for j in range(num_tasks):
             if assignment[i, j] == 1:
                 plt.gca().add_patch(
-                    plt.Rectangle(
+                    Rectangle(
                         (j-0.5, i-0.5), 1, 1,
                         fill=False, edgecolor='green', lw=3
                     )
@@ -127,5 +128,9 @@ def visualize_solution(solver, x, costs, status):
 
 
 if __name__ == '__main__':
-    solver, x, costs, status = solve_assignment_problem()
-    visualize_solution(solver, x, costs, status)
+    result = solve_assignment_problem()
+    if result is not None:
+        solver, x, costs, status = result
+        visualize_solution(solver, x, costs, status)
+    else:
+        print("Failed to create solver")

@@ -1,7 +1,7 @@
 import json
 import os
-from typing import Dict, List, Any, Optional
-from datetime import datetime, date, timedelta
+from typing import Dict, List, Any
+from datetime import datetime, timedelta
 
 class ConfigLoader:
     """Class for loading configuration files for the Resource Planner."""
