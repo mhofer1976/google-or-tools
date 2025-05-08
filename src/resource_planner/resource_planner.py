@@ -1,19 +1,9 @@
 from ortools.sat.python import cp_model
-from datetime import datetime, timedelta, date
-from typing import List, Dict, Set, Tuple, Optional, Type
-import logging
-import json
-from pathlib import Path
+from typing import List, Type, Dict, Tuple, Any
 from enum import Enum
 
 from .constraints import (
     BaseConstraint,
-    RequiredEmployeesConstraint,
-    BlockedDaysConstraint,
-    OneDutyPerDayConstraint,
-    RestTimeConstraint,
-    MaxDaysInARowConstraint,
-    WorkloadBalanceConstraint,
 )
 
 
@@ -35,7 +25,7 @@ class ResourcePlanner:
     This planner allows adding various constraints to ensure the schedule meets all requirements.
     """
     
-    def __init__(self, debug_mode: bool = False, log_file: str = None):
+    def __init__(self):
         """
         Initialize the resource planner with an empty model and data structures.
         
@@ -43,12 +33,13 @@ class ResourcePlanner:
             debug_mode: Whether to enable debugging features
             log_file: Path to log file for debugging output
         """
-        self.model = cp_model.CpModel()
-        self.assignments = {}
-        self.employees = []
-        self.duties = []
-        self.calendar_days = set()
-        self.constraints = []
+        self.model: cp_model.CpModel = cp_model.CpModel()
+        self.solver_assignments: Dict[Tuple[int, int], Any] = {}  # For solver variables
+        self.result_assignments: List[Dict[str, Any]] = []  # For final results
+        self.employees: List[Dict[str, Any]] = []
+        self.duties: List[Dict[str, Any]] = []
+        self.calendar_days: set = set()
+        self.constraints: List[BaseConstraint] = []
         
     def add_employee(self, id: int, name: str, max_days_in_row: int, 
                     blocked_days: List[str], max_hours_per_day: int,
@@ -105,7 +96,7 @@ class ResourcePlanner:
             constraint_class: The constraint class to instantiate
             **kwargs: Additional arguments to pass to the constraint constructor
         """
-        constraint = constraint_class(self.model, self.assignments, self.employees, self.duties, **kwargs)
+        constraint = constraint_class(self.model, self.solver_assignments, self.employees, self.duties, **kwargs)
         self.constraints.append(constraint)
         
     def setup_model(self) -> None:
@@ -118,7 +109,7 @@ class ResourcePlanner:
         for emp in self.employees:
             for duty in self.duties:
                 var_name = f'emp_{emp["id"]}_duty_{duty["id"]}'
-                self.assignments[emp['id'], duty['id']] = self.model.NewBoolVar(var_name)
+                self.solver_assignments[emp['id'], duty['id']] = self.model.NewBoolVar(var_name)
         
         # Apply all constraints
         for constraint in self.constraints:
@@ -156,18 +147,18 @@ class ResourcePlanner:
                     "employees": [
                         {"employee_id": emp['id'], "employee_name": emp['name']}
                         for emp in self.employees
-                        if solver.Value(self.assignments[emp['id'], duty['id']]) == 1
+                        if solver.Value(self.solver_assignments[emp['id'], duty['id']]) == 1
                     ]
                 }
                 for duty in self.duties
-                if any(solver.Value(self.assignments[emp['id'], duty['id']]) == 1 
+                if any(solver.Value(self.solver_assignments[emp['id'], duty['id']]) == 1 
                       for emp in self.employees)
             ])
             
             # Sort assignments by multiple fields: date, start_time, and employee_name
             assignments.sort(key=lambda x: (x['date'], x['duty_code'], x['start_time']))
         
-        self.assignments = assignments
+        self.result_assignments = assignments
         
         # Map OR-Tools status to our SolverStatus enum
         if status == cp_model.OPTIMAL:
@@ -187,14 +178,14 @@ class ResourcePlanner:
         Raises:
             ValueError: If there are no valid assignments to validate
         """
-        if not self.assignments:
+        if not self.result_assignments:
             raise ValueError("No valid assignments to validate")
             
         validation_results = {}
         
         for constraint in self.constraints:
             constraint_name = constraint.__class__.__name__
-            is_valid = constraint.validate(self.assignments)
+            is_valid = constraint.validate(self.result_assignments)
             validation_results[constraint_name] = is_valid
             
         return validation_results

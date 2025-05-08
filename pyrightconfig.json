@@ -1,0 +1,14 @@
+{
+    "exclude": [
+        "**/lib/**",
+        "**/site-packages/**",
+        "**/.venv/**",
+        ".venv/**"
+    ],
+    "ignore": [
+        "**/lib/**",
+        "**/site-packages/**",
+        "**/.venv/**",
+        ".venv/**"
+    ]
+} 

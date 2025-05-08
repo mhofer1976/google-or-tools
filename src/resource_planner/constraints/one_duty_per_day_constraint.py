@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Set
+from typing import Dict, List, Any
 from collections import defaultdict
 from .base_constraint import BaseConstraint
 

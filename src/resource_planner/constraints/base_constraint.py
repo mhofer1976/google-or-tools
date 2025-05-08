@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Set
+from typing import Dict, List, Any, Optional
 from ortools.sat.python import cp_model
 
 
@@ -78,7 +78,7 @@ class BaseConstraint(ABC):
             and any(emp["employee_id"] == employee_id for emp in assignment["employees"])
         ]
 
-    def get_duty_by_id(self, duty_id: int) -> Dict[str, Any]:
+    def get_duty_by_id(self, duty_id: int) -> Optional[Dict[str, Any]]:
         """
         Helper method to get a duty by its ID.
 
@@ -90,7 +90,7 @@ class BaseConstraint(ABC):
         """
         return next((duty for duty in self.duties if duty["id"] == duty_id), None)
 
-    def get_employee_by_id(self, employee_id: int) -> Dict[str, Any]:
+    def get_employee_by_id(self, employee_id: int) -> Optional[Dict[str, Any]]:
         """
         Helper method to get an employee by their ID.
 

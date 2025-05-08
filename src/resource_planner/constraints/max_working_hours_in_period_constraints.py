@@ -40,8 +40,9 @@ class MaxWorkingHoursInPeriodConstraints(BaseConstraint):
             
             # Sum up working minutes for all assigned duties
             total_minutes = sum(
-                self.get_duty_by_id(assignment['duty_id'])['working_minutes']
+                duty['working_minutes']
                 for assignment in emp_assignments
+                if (duty := self.get_duty_by_id(assignment['duty_id'])) is not None
             )
             
             # Check if total hours exceed maximum

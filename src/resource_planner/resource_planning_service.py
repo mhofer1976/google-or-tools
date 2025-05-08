@@ -1,5 +1,5 @@
-from typing import Dict, List, Any, Optional, Union
-from datetime import datetime, date, timedelta
+from typing import Dict, List, Any, Union
+from datetime import datetime
 import json
 import os
 from .resource_planner import ResourcePlanner
@@ -11,7 +11,7 @@ from .constraints import (
     RestTimeConstraint,
     MaxDaysInARowConstraint,
     WorkloadBalanceConstraint,
-    MaxWorkingMinsInPeriodConstraints,
+    MaxWorkingHoursInPeriodConstraints,
 )
 
 
@@ -85,7 +85,7 @@ class ResourcePlanningService:
         self.planner.add_constraint(RequiredEmployeesConstraint)
         self.planner.add_constraint(BlockedDaysConstraint)
         self.planner.add_constraint(OneDutyPerDayConstraint)
-        # self.planner.add_constraint(MaxWorkingMinsInPeriodConstraints)
+        self.planner.add_constraint(MaxWorkingHoursInPeriodConstraints)
         self.planner.add_constraint(
             RestTimeConstraint, min_rest_hours=12
         )  # TODO: make this configurable
@@ -125,7 +125,7 @@ class ResourcePlanningService:
 
         # Solve the problem
         status = self.planner.solve()
-        assignments = self.planner.assignments
+        assignments = self.planner.result_assignments
 
         # Record end time
         end_datetime = datetime.now()
@@ -178,12 +178,15 @@ class ResourcePlanningService:
                 - valid: Boolean indicating if the configuration is valid
                 - errors: List of error messages (empty if valid)
         """
-        config_loader = ConfigLoader()
-        try:
-            # Use the config_loader's validation method
-            config_loader._validate_configuration(config)
-            return {"valid": True, "errors": []}
-        except ValueError as e:
-            return {"valid": False, "errors": [str(e)]}
-        except Exception as e:
-            return {"valid": False, "errors": [f"Unexpected error: {str(e)}"]}
+        
+        return {"valid": False, "errors": ["Not implemented yet."]}
+        
+        # config_loader = ConfigLoader()
+        # try:
+        #     # Use the config_loader's validation method
+        #     config_loader._validate_configuration(config)
+        #     return {"valid": True, "errors": []}
+        # except ValueError as e:
+        #     return {"valid": False, "errors": [str(e)]}
+        # except Exception as e:
+        #     return {"valid": False, "errors": [f"Unexpected error: {str(e)}"]}

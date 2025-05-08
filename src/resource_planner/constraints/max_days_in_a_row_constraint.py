@@ -1,5 +1,5 @@
-from typing import Dict, List, Any, Set
-from datetime import datetime, timedelta
+from typing import Dict, List, Any
+from datetime import datetime
 from .base_constraint import BaseConstraint
 
 class MaxDaysInARowConstraint(BaseConstraint):
