@@ -19,8 +19,8 @@
       "max_days_in_a_row": 6,
       "off_days": [],
       "max_hours_per_day": 8,
-      "max_hours_in_period": 32,
-      "work_percentage": 100
+      "max_hours_in_period": 100,
+      "work_percentage": 32
     }
   ],
   "duties": [

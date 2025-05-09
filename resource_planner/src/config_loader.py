@@ -3,10 +3,17 @@ import os
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
 
+DEFAULT_CONFIG_DIR = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), 
+    '..', 
+    'data', 
+    'configurations'
+))
+
 class ConfigLoader:
     """Class for loading configuration files for the Resource Planner."""
     
-    def __init__(self, config_dir: str = "data/resource_planner/configurations"):
+    def __init__(self, config_dir: str = DEFAULT_CONFIG_DIR):
         """
         Initializes the ConfigLoader.
         
@@ -233,17 +240,3 @@ class ConfigLoader:
                 return True
             except ValueError:
                 return False
-    
-
-
-        """
-        Finds all employees who are blocked on a specific date.
-        
-        Args:
-            config: Dictionary with the configuration
-            date_str: Date in format "YYYY-MM-DD"
-            
-        Returns:
-            List of blocked employees on this date
-        """
-        return [emp for emp in config["employees"] if date_str in emp["off_days"]] 

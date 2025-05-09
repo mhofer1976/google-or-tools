@@ -1,5 +1,5 @@
 import pytest
-from src.resource_planner.constraints import RestTimeConstraint
+from resource_planner.src.constraints import RestTimeConstraint
 
 class TestRestTimeConstraint:
     """Tests for RestTimeConstraint validation."""

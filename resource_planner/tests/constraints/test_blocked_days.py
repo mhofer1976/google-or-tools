@@ -1,5 +1,5 @@
 import pytest
-from src.resource_planner.constraints import BlockedDaysConstraint
+from resource_planner.src.constraints import BlockedDaysConstraint
 
 class TestBlockedDaysConstraint:
     """Tests for BlockedDaysConstraint validation."""

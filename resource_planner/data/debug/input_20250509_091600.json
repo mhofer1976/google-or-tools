@@ -1,0 +1,172 @@
+{
+  "name": "Test Max Working Hours",
+  "description": "A very simple test with 3 employees and a duty to test max working time per period",
+  "start_date": "2025-05-01",
+  "end_date": "2025-05-14",
+  "employees": [
+    {
+      "id": 0,
+      "name": "Anna Schmidt",
+      "max_days_in_a_row": 6,
+      "off_days": [],
+      "max_hours_per_day": 8,
+      "max_hours_in_period": 80,
+      "work_percentage": 20
+    },
+    {
+      "id": 1,
+      "name": "Ben Weber",
+      "max_days_in_a_row": 6,
+      "off_days": [],
+      "max_hours_per_day": 8,
+      "max_hours_in_period": 80,
+      "work_percentage": 100
+    },
+    {
+      "id": 2,
+      "name": "Garry Smith",
+      "max_days_in_a_row": 6,
+      "off_days": [],
+      "max_hours_per_day": 8,
+      "max_hours_in_period": 80,
+      "work_percentage": 100
+    },
+    {
+      "id": 3,
+      "name": "Lisa Johnson",
+      "max_days_in_a_row": 6,
+      "off_days": [],
+      "max_hours_per_day": 8,
+      "max_hours_in_period": 80,
+      "work_percentage": 100
+    }
+  ],
+  "duties": [
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-01",
+      "id": 0,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-02",
+      "id": 1,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-03",
+      "id": 2,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-04",
+      "id": 3,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-05",
+      "id": 4,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-06",
+      "id": 5,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-07",
+      "id": 6,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-08",
+      "id": 7,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-09",
+      "id": 8,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-10",
+      "id": 9,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-11",
+      "id": 10,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-12",
+      "id": 11,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-13",
+      "id": 12,
+      "working_minutes": 540
+    },
+    {
+      "code": "DIS",
+      "required_employees": 2,
+      "start_time": "04:00",
+      "end_time": "13:00",
+      "date": "2025-05-14",
+      "id": 13,
+      "working_minutes": 540
+    }
+  ]
+}

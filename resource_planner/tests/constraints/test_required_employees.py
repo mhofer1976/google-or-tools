@@ -1,5 +1,5 @@
 import pytest
-from src.resource_planner.constraints import RequiredEmployeesConstraint
+from resource_planner.src.constraints import RequiredEmployeesConstraint
 
 class TestRequiredEmployeesConstraint:
     """Tests for RequiredEmployeesConstraint validation."""

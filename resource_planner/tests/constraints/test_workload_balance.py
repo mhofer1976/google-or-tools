@@ -1,5 +1,5 @@
 import pytest
-from src.resource_planner.constraints import WorkloadBalanceConstraint
+from resource_planner.src.constraints import WorkloadBalanceConstraint
 
 class TestWorkloadBalanceConstraint:
     """Tests for WorkloadBalanceConstraint validation."""

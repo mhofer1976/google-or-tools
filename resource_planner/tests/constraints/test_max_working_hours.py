@@ -1,5 +1,5 @@
 import pytest
-from src.resource_planner.constraints import MaxWorkingHoursInPeriodConstraints
+from resource_planner.src.constraints import MaxWorkingHoursInPeriodConstraints
 
 class TestMaxWorkingHoursConstraint:
     """Tests for MaxWorkingHoursInPeriodConstraints validation."""

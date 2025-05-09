@@ -1,0 +1,74 @@
+{
+  "date": "2025-05-09",
+  "start_time": "09:15:03",
+  "end_time": "09:15:03",
+  "duration_seconds": 0.01447,
+  "status": "OPTIMAL",
+  "assignments": [
+    {
+      "duty_id": 0,
+      "duty_code": "DIS",
+      "date": "2025-05-01",
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "employees": [
+        {
+          "employee_id": 1,
+          "employee_name": "Ben Weber"
+        }
+      ]
+    },
+    {
+      "duty_id": 1,
+      "duty_code": "DIS",
+      "date": "2025-05-02",
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "employees": [
+        {
+          "employee_id": 1,
+          "employee_name": "Ben Weber"
+        }
+      ]
+    },
+    {
+      "duty_id": 2,
+      "duty_code": "DIS",
+      "date": "2025-05-03",
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "employees": [
+        {
+          "employee_id": 1,
+          "employee_name": "Ben Weber"
+        }
+      ]
+    },
+    {
+      "duty_id": 3,
+      "duty_code": "DIS",
+      "date": "2025-05-04",
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "employees": [
+        {
+          "employee_id": 1,
+          "employee_name": "Ben Weber"
+        }
+      ]
+    },
+    {
+      "duty_id": 4,
+      "duty_code": "DIS",
+      "date": "2025-05-05",
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "employees": [
+        {
+          "employee_id": 1,
+          "employee_name": "Ben Weber"
+        }
+      ]
+    }
+  ]
+}

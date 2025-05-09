@@ -3,7 +3,7 @@ from datetime import datetime
 import json
 import os
 from .resource_planner import ResourcePlanner
-from .config_loader import ConfigLoader
+from .config_loader import ConfigLoader, DEFAULT_CONFIG_DIR
 from .constraints import (
     RequiredEmployeesConstraint,
     BlockedDaysConstraint,
@@ -30,7 +30,7 @@ class ResourcePlanningService:
     def __init__(
         self,
         config_source: Union[str, Dict[str, Any]],
-        config_dir: str = "data/resource_planner/configurations",
+        config_dir: str = DEFAULT_CONFIG_DIR,
     ):
         """
         Initialize the ResourcePlanningService.
@@ -67,7 +67,7 @@ class ResourcePlanningService:
                 emp["off_days"],
                 emp["max_hours_per_day"],
                 emp["max_hours_in_period"],
-            )
+            ) #TODO: Blocked days are missing :)
 
         # Add duties
         for duty in self.config["duties"]:
@@ -112,7 +112,8 @@ class ResourcePlanningService:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Create debug directory if it doesn't exist
-        debug_dir = "data/resource_planner/debug"
+        current_file_dir = os.path.dirname(__file__)
+        debug_dir = os.path.abspath(os.path.join(current_file_dir, '..', 'data', 'debug'))
         os.makedirs(debug_dir, exist_ok=True)
 
         # Save input configuration
@@ -152,7 +153,7 @@ class ResourcePlanningService:
 
     @classmethod
     def list_available_configurations(
-        cls, config_dir: str = "data/resource_planner/configurations"
+        cls, config_dir: str = DEFAULT_CONFIG_DIR
     ) -> List[str]:
         """
         List all available configuration names.

@@ -1,0 +1,73 @@
+{
+  "name": "Test Max Working Hours",
+  "description": "A very simple test with 3 employees and a duty to test max working time per period",
+  "start_date": "2025-05-01",
+  "end_date": "2025-05-05",
+  "employees": [
+    {
+      "id": 0,
+      "name": "Anna Schmidt",
+      "max_days_in_a_row": 6,
+      "off_days": [],
+      "max_hours_per_day": 8,
+      "max_hours_in_period": 8,
+      "work_percentage": 20
+    },
+    {
+      "id": 1,
+      "name": "Ben Weber",
+      "max_days_in_a_row": 6,
+      "off_days": [],
+      "max_hours_per_day": 8,
+      "max_hours_in_period": 32,
+      "work_percentage": 100
+    }
+  ],
+  "duties": [
+    {
+      "code": "DIS",
+      "required_employees": 1,
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "date": "2025-05-01",
+      "id": 0,
+      "working_minutes": 480
+    },
+    {
+      "code": "DIS",
+      "required_employees": 1,
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "date": "2025-05-02",
+      "id": 1,
+      "working_minutes": 480
+    },
+    {
+      "code": "DIS",
+      "required_employees": 1,
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "date": "2025-05-03",
+      "id": 2,
+      "working_minutes": 480
+    },
+    {
+      "code": "DIS",
+      "required_employees": 1,
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "date": "2025-05-04",
+      "id": 3,
+      "working_minutes": 480
+    },
+    {
+      "code": "DIS",
+      "required_employees": 1,
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "date": "2025-05-05",
+      "id": 4,
+      "working_minutes": 480
+    }
+  ]
+}

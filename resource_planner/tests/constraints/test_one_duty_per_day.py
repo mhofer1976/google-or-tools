@@ -1,5 +1,5 @@
 import pytest
-from src.resource_planner.constraints import OneDutyPerDayConstraint
+from resource_planner.src.constraints import OneDutyPerDayConstraint
 
 class TestOneDutyPerDayConstraint:
     """Tests for OneDutyPerDayConstraint validation."""

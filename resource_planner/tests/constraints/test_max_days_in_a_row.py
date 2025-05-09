@@ -1,5 +1,5 @@
 import pytest
-from src.resource_planner.constraints import MaxDaysInARowConstraint
+from resource_planner.src.constraints import MaxDaysInARowConstraint
 
 class TestMaxDaysInARowConstraint:
     """Tests for MaxDaysInARowConstraint validation."""
