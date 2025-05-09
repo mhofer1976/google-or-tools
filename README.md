@@ -4,184 +4,96 @@ A collection of practical examples and applications built using Google OR-Tools 
 
 ## Overview
 
-This repository contains multiple modules and applications that demonstrate how to use Google OR-Tools for different types of optimization problems. Each module is self-contained and can be used independently.
+This repository contains multiple modules and applications that demonstrate how to use Google OR-Tools for different types of optimization problems. Each module is designed to be self-contained and can be used independently.
 
-## Available Modules
+## Project Setup
 
-### 1. Resource Planner API
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd <repository-name>
+    ```
 
-A RESTful API for solving resource planning problems using constraint-based optimization.
+2.  **Create and activate a virtual environment:**
+    It is highly recommended to use a virtual environment to manage project dependencies.
+    ```bash
+    # Using Python's built-in venv
+    python -m venv .venv
+    # Activate the environment
+    # On Windows
+    .venv\Scripts\activate
+    # On macOS/Linux
+    source .venv/bin/activate
+    ```
 
-#### Features
-- Solve resource planning problems with various constraints
-- Support for multiple configuration formats
-- Validation of solutions against constraints
-- Easy integration with other systems
-- Built-in debugging capabilities
+3.  **Install dependencies using `uv`:**
+    This project uses `uv` for fast dependency management.
+    ```bash
+    # Install uv if you haven't already (ensure pip is from your activated venv)
+    pip install uv
 
-#### API Endpoints
+    # Sync dependencies from pyproject.toml
+    uv sync
+    ```
 
-##### List Available Configurations
-```
-GET /api/resource-planner/configurations
-```
-Returns a list of available configuration names.
+## Available Applications
 
-##### Solve Resource Planning Problem
-```
-POST /api/resource-planner/solve
-```
-Accepts either:
-- A configuration name: `{"config_name": "oge"}`
-- A complete configuration JSON
+Currently, the primary application available is:
 
-Returns a JSON with valid assignments. Example:
-```
-{
-  "date": "2025-05-07",
-  "start_time": "11:30:50",
-  "end_time": "11:30:50",
-  "duration_seconds": 0.031709,
-  "status": "OPTIMAL",
-  "assignments": [
-    {
-      "duty_id": 0,
-      "duty_code": "DIS",
-      "date": "2025-05-01",
-      "start_time": "04:00",
-      "end_time": "13:00",
-      "employees": [
-        {
-          "employee_id": 0,
-          "employee_name": "Anna Schmidt"
-        },
-        {
-          "employee_id": 1,
-          "employee_name": "Ben Weber"
-        }
-      ]
-    }, ...
-  ]
-}
-```
+*   **Resource Planner API**: A RESTful API for solving resource planning problems using constraint-based optimization.
+    *   For detailed information on the Resource Planner API, including how to run it, its API endpoints, configuration details, and how to run its specific tests, please see its dedicated [README.md](./resource_planner/README.md).
+    *   **Interactive Testing:** A Jupyter notebook (`resource_planner/notebooks/resource_planning.ipynb`) is provided to interactively test the API. This notebook demonstrates how to list available configurations and solve resource planning problems using the API. Ensure the API is running before executing the notebook cells.
 
-##### Validate Configuration
-```
-POST /api/resource-planner/validate-config
-```
-Accepts a configuration JSON and returns validation results.
+*(More applications may be added in the future.)*
 
-### 2. TBD
-- TBD
+## General Debugging
 
-## Running the Applications
-
-1. Install dependencies using `uv`:
-   ```bash
-   # Install uv if you haven't already
-   pip install uv
-
-   # Sync dependencies from pyproject.toml
-   uv sync
-   ```
-
-2. Run the desired application:
-   ```bash
-   # For Resource Planner API
-   python src/resource_planner/run_api.py
-
-   # With debugging enabled (Windows PowerShell)
-   $env:DEBUG_API=1
-   python src/resource_planner/run_api.py
-
-   # With debugging enabled (Linux/Mac)
-   DEBUG_API=1 python src/resource_planner/run_api.py
-   ```
-
-## Debugging
-
-Each module includes built-in debugging capabilities. Here are the main ways to debug:
+Here are general ways to debug applications in this project:
 
 ### 1. Using Python's Built-in Debugger (pdb)
 
-1. Start the application with debugging enabled as shown above
-2. The debugger will pause at breakpoints. Use these commands:
-   - `n` - Step to the next line
-   - `s` - Step into a function
-   - `c` - Continue execution
-   - `p variable` - Print a variable's value
-   - `l` - Show the current location in the code
-   - `q` - Quit the debugger
+1.  Identify the main script of the application you want to debug.
+2.  You can insert `import pdb; pdb.set_trace()` in your code where you want to start debugging.
+3.  Run the application script. The debugger will pause at your breakpoint.
+    *   `n` - Step to the next line
+    *   `s` - Step into a function
+    *   `c` - Continue execution
+    *   `p variable` - Print a variable's value
+    *   `l` - Show the current location in the code
+    *   `q` - Quit the debugger
 
 ### 2. Using VS Code's Debugger (Recommended)
 
-1. Create a launch configuration in VS Code.
-
-   ```json
-   # For Resource Planner API
-   {
-       "version": "0.2.0",
-       "configurations": [
-         {
-            "name": "Python: Resource Planner API",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "flask",
-            "env": {
-                "FLASK_APP": "src.resource_planner.run_api",
-                "FLASK_ENV": "development",
-                "DEBUG_API": "1"
-            },
-            "args": [
-                "run",
-                "--debug",
-                "--reload"
-            ],
-            "jinja": true,
-            "justMyCode": false,
-            "cwd": "${workspaceFolder}"
-         }
-       ]
-   }
-   ```
-
-
-3. Choose the configuration and start debugging (F5)
-
-## Configuration Formats
-
-Each module has its own configuration format.
-
-### Resource Planner Configuration Format
-
-```json
-{
-  "name": "Configuration Name",
-  "description": "Description of the configuration",
-  "start_date": "YYYY-MM-DD",
-  "end_date": "YYYY-MM-DD",
-  "employees": [
+1.  Ensure you have the Python extension for VS Code installed.
+2.  Open the project folder in VS Code.
+3.  Configure `launch.json` in the `.vscode` folder for the specific application you want to debug. An example for the Resource Planner API is already provided.
+    General structure for a Flask app:
+    ```json
     {
-      "id": 0,
-      "name": "Employee Name",
-      "max_days_in_a_row": 6,
-      "off_days": ["YYYY-MM-DD", "YYYY-MM-DD"],
-      "max_hours_per_day": 8,
-      "max_hours_in_period": 160,
-      "work_percentage": 100
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Python: Flask App",
+                "type": "debugpy",
+                "request": "launch",
+                "module": "flask",
+                "env": {
+                    "FLASK_APP": "your_app_module.run_api_or_app_file", // Adjust path
+                    "FLASK_ENV": "development"
+                },
+                "args": [
+                    "run",
+                    "--reload" // Enable auto-reload for development. Note: If you experience issues with the VS Code debugger, try --no-reload.
+                ],
+                "jinja": true, // If using Jinja templates
+                "justMyCode": true, // Set to false to step into library code
+                "cwd": "${workspaceFolder}"
+            }
+        ]
     }
-  ],
-  "duties": [
-    {
-      "code": "DUTY_CODE",
-      "required_employees": 2,
-      "start_time": "HH:MM",
-      "end_time": "HH:MM"
-    }
-  ]
-}
-```
+    ```
+4.  Select the desired configuration from the "Run and Debug" panel and press F5 to start debugging.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
