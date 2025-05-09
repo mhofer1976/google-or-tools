@@ -24,7 +24,7 @@ class RequiredEmployeesConstraint(BaseConstraint):
         """Count how many employees are assigned to each duty."""
         duty_counts = defaultdict(int)
         for assignment in assignments:
-            duty_counts[assignment['duty_id']] += 1
+            duty_counts[assignment['duty_id']] = len(assignment['employees'])
         return duty_counts
     
     def validate(self, assignments: List[Dict[str, Any]]) -> bool:
@@ -39,7 +39,9 @@ class RequiredEmployeesConstraint(BaseConstraint):
         """
         duty_counts = self._count_assignments_per_duty(assignments)
         
+        # Only check duties that are in the assignments
         return all(
             duty_counts.get(duty['id'], 0) == duty['required_employees']
             for duty in self.duties
+            if any(assignment['duty_id'] == duty['id'] for assignment in assignments)
         ) 

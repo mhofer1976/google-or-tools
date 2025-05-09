@@ -91,7 +91,7 @@ class RestTimeConstraint(BaseConstraint):
     
     def validate(self, assignments: List[Dict[str, Any]]) -> bool:
         """
-        Validate that all employees have sufficient rest time between duties.
+        Validate that employees have sufficient rest time between duties.
         
         Args:
             assignments: List of assignment dictionaries from the solver
@@ -100,28 +100,24 @@ class RestTimeConstraint(BaseConstraint):
             True if all employees have sufficient rest time, False otherwise
         """
         for emp in self.employees:
-            # Get all assignments for this employee
             emp_assignments = self.get_employee_assignments(assignments, emp['id'])
             
             # Sort assignments by start time
             sorted_assignments = sorted(
                 emp_assignments,
-                key=lambda a: self._duty_times[a['duty_id']]['start']
+                key=lambda x: self._parse_datetime(x['date'], x['start_time'])
             )
             
             # Check rest time between consecutive assignments
             for i in range(len(sorted_assignments) - 1):
-                duty1_id = sorted_assignments[i]['duty_id']
-                duty2_id = sorted_assignments[i+1]['duty_id']
+                current = sorted_assignments[i]
+                next_duty = sorted_assignments[i + 1]
                 
-                end1 = self._duty_times[duty1_id]['end']
-                start2 = self._duty_times[duty2_id]['start']
+                end_time = self._parse_datetime(current['date'], current['end_time'])
+                start_time = self._parse_datetime(next_duty['date'], next_duty['start_time'])
                 
-                # Calculate minutes between end of duty1 and start of duty2
-                diff_minutes = self._get_rest_minutes(end1, start2)
-                
-                # If less than min_rest_minutes between duties, constraint is violated
-                if 0 < diff_minutes < self.min_rest_minutes:
+                rest_minutes = self._get_rest_minutes(end_time, start_time)
+                if rest_minutes < self.min_rest_minutes:
                     return False
                     
         return True 

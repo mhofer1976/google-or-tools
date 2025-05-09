@@ -1,6 +1,7 @@
 from typing import Dict, List, Any
 from collections import defaultdict
 from .base_constraint import BaseConstraint
+from datetime import datetime, timedelta
 
 class WorkloadBalanceConstraint(BaseConstraint):
     """
@@ -164,32 +165,31 @@ class WorkloadBalanceConstraint(BaseConstraint):
         
         # Sum up minutes for each employee based on assignments
         for assignment in assignments:
-            duty_id = assignment.get('duty_id')
-            if not duty_id:
-                continue
-                
-            duty = self.get_duty_by_id(duty_id)
-            if not duty:
-                continue
-                
-            minutes = duty['working_minutes']
+            # Calculate minutes from start and end time
+            start_time = datetime.strptime(assignment['start_time'], "%H:%M")
+            end_time = datetime.strptime(assignment['end_time'], "%H:%M")
             
-            for emp_name in assignment['assigned_employees']:
-                emp = next((e for e in self.employees if e['name'] == emp_name), None)
-                if not emp:
-                    continue
-                    
-                emp_workloads[emp['id']] += minutes
+            # If end time is earlier than start time, it's an overnight duty
+            if end_time < start_time:
+                end_time = end_time + timedelta(days=1)
+            
+            minutes = int((end_time - start_time).total_seconds() / 60)
+            
+            for employee in assignment['employees']:
+                emp_id = employee['employee_id']
+                emp_workloads[emp_id] += minutes
         
         # Calculate average workload
         total_workload = sum(emp_workloads.values())
-        avg_workload = total_workload / len(self.employees) if self.employees else 0
+        avg_workload = total_workload / len(emp_workloads) if emp_workloads else 0
         
         # Check if any employee's workload deviates too much from the average
+        if avg_workload == 0:
+            return True
+            
         return all(
             abs(workload - avg_workload) / avg_workload * 100 <= self.max_deviation_percent
             for workload in emp_workloads.values()
-            if avg_workload > 0
         )
     
     def _calculate_duty_hours(self, start_time: str, end_time: str) -> float:
@@ -203,8 +203,6 @@ class WorkloadBalanceConstraint(BaseConstraint):
         Returns:
             Number of hours the duty lasts
         """
-        from datetime import datetime, timedelta
-        
         start = datetime.strptime(start_time, "%H:%M")
         end = datetime.strptime(end_time, "%H:%M")
         
