@@ -104,51 +104,63 @@ class WorkloadBalanceConstraint(BaseConstraint):
         )
         
         # Create variable for total utilization (scaled)
-        total_utilization = self.model.NewIntVar(
+        # Each utilization in self.emp_utilizations.values() is 0-100.
+        # We scale each by SCALE before summing, or sum then scale. Summing then scaling is fine.
+        total_scaled_utilization_sum = self.model.NewIntVar(
             0, 100 * len(self.employees) * SCALE, 
-            'total_utilization_scaled'
+            'total_utilization_sum_scaled'
         )
         
-        # Add constraint for total utilization
-        self.model.Add(total_utilization == sum(self.emp_utilizations.values()) * SCALE)
+        # Sum of (utilization_var * SCALE) for all employees
+        # Or, sum(utilization_var) then multiply result by SCALE
+        # The original approach sums IntVar objects then multiplies the sum expression by SCALE.
+        # This is usually supported by CP-SAT for linear expressions.
+        self.model.Add(total_scaled_utilization_sum == sum(self.emp_utilizations.values()) * SCALE)
         
         # Add constraint for average utilization
+        # self.avg_utilization = total_scaled_utilization_sum / len(self.employees)
         # Using scaled values to maintain precision with small denominators
         self.model.AddDivisionEquality(
             self.avg_utilization,
-            total_utilization,
-            len(self.employees)
+            total_scaled_utilization_sum, # This is already scaled sum of utilizations
+            len(self.employees) # Denominator is number of employees
         )
         
-        # For each employee, ensure their utilization is within the allowed range
-        for emp_id, utilization in workloads['emp_utilizations'].items():
-            # Scale up the utilization
-            scaled_utilization = self.model.NewIntVar(
+        # The old section for enforcing hard deviation constraints is removed.
+        # We now define an objective to minimize the maximum deviation.
+
+        # Define a variable for the maximum absolute deviation (scaled).
+        # This will be the objective to minimize.
+        # The maximum possible deviation is 100% (e.g., avg 0%, emp 100%), scaled by SCALE.
+        max_abs_scaled_deviation = self.model.NewIntVar(
+            0, 100 * SCALE, 
+            'max_abs_scaled_deviation'
+        )
+
+        # For each employee, ensure their scaled deviation from the scaled average
+        # is less than or equal to max_abs_scaled_deviation.
+        for emp_id, utilization_var in self.emp_utilizations.items():
+            # utilization_var is in the range [0, 100].
+            # Scale it up to match the scale of self.avg_utilization.
+            emp_scaled_utilization = self.model.NewIntVar(
                 0, 100 * SCALE, 
-                f'utilization_scaled_{emp_id}'
+                f'utilization_scaled_{emp_id}' # Reuses name from the removed block, which is fine.
             )
-            self.model.Add(scaled_utilization == utilization * SCALE)
+            self.model.Add(emp_scaled_utilization == utilization_var * SCALE)
             
-            # Calculate the allowed deviation for this employee (scaled)
-            max_deviation = self.model.NewIntVar(
-                0, 100 * SCALE, 
-                f'deviation_scaled_{emp_id}'
-            )
+            # Add constraints for: max_abs_scaled_deviation >= abs(emp_scaled_utilization - self.avg_utilization)
+            # This is equivalent to:
+            # max_abs_scaled_deviation >= emp_scaled_utilization - self.avg_utilization AND
+            # max_abs_scaled_deviation >= -(emp_scaled_utilization - self.avg_utilization)
             
-            # Calculate deviation using scaled values
-            # The division by 100 is fine as is because:
-            # 1. The numerator is already scaled (avg_utilization * max_deviation_percent)
-            # 2. The denominator (100) is a constant
-            # 3. We want the result in the same scale as other variables
-            self.model.AddDivisionEquality(
-                max_deviation,
-                self.avg_utilization * self.max_deviation_percent,
-                100
-            )
-            
-            # Add constraints to keep utilization within allowed range
-            self.model.Add(scaled_utilization <= self.avg_utilization + max_deviation)
-            self.model.Add(scaled_utilization >= self.avg_utilization - max_deviation)
+            self.model.Add(max_abs_scaled_deviation >= emp_scaled_utilization - self.avg_utilization)
+            self.model.Add(max_abs_scaled_deviation >= self.avg_utilization - emp_scaled_utilization)
+
+        # Minimize this maximum absolute deviation.
+        # This makes the workload balance a soft constraint: the solver will try to make
+        # max_abs_scaled_deviation as small as possible, ideally zero, but will accept
+        # larger values if necessary to satisfy other hard constraints.
+        self.model.Minimize(max_abs_scaled_deviation)
     
     def validate(self, assignments: List[Dict[str, Any]]) -> bool:
         """
